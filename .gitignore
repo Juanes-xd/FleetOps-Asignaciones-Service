@@ -1,0 +1,23 @@
+# Secrets
+.env
+
+# Build
+target/
+*.jar
+*.war
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Logs
+*.log
+logs/
+
+# Coverage
+target/site/
+
+# OS
+.DS_Store
+Thumbs.db
