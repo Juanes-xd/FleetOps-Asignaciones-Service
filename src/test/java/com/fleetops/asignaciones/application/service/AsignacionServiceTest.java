@@ -81,8 +81,7 @@ class AsignacionServiceTest {
         CrearAsignacionUseCase.Command command = new CrearAsignacionUseCase.Command(
                 "CAMION",
                 LocalDate.now().plusDays(1),
-                LocalDate.now().plusDays(5),
-                "test@fleetops.com"
+                LocalDate.now().plusDays(5)
         );
 
         // Act
@@ -116,8 +115,7 @@ class AsignacionServiceTest {
         CrearAsignacionUseCase.Command command = new CrearAsignacionUseCase.Command(
                 "MOTO",
                 LocalDate.now().plusDays(1),
-                LocalDate.now().plusDays(3),
-                "test@fleetops.com"
+                LocalDate.now().plusDays(3)
         );
 
         // Act & Assert

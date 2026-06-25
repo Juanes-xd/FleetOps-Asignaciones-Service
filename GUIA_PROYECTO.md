@@ -221,7 +221,8 @@ kafka-console-producer \
 
 # Pegar este JSON y presionar Enter:
 {"idAsignacion":"UUID_DE_TU_ASIGNACION","idVehiculo":"UUID_DEL_VEHICULO"}
-
+#Ejemplo para las longitudes de los UUIDs:
+{"idAsignacion":"dc912c19-25d1-4d29-be08-0f03f2459f45","idVehiculo":"11111111-1111-1111-1111-111211111111"}
 # Simular que Vehículos rechazó la solicitud
 kafka-console-producer \
   --bootstrap-server localhost:29092 \
@@ -243,6 +244,12 @@ kafka-console-consumer \
   --bootstrap-server localhost:29092 \
   --topic fleetops.vehiculos.solicitar \
   --from-beginning
+  
+#Ver todas las solictudes completadas
+kafka-console-consumer \  
+  --bootstrap-server localhost:29092 \ 
+  --topic fleetops.asignaciones.completada \
+  --from-beginning 
 ```
 
 ---
@@ -251,15 +258,15 @@ kafka-console-consumer \
 
 ```bash
 # Todos los tests unitarios
-mvn test
+./mvnw test
 
 # Un test específico
-mvn test -Dtest=AsignacionServiceTest
-mvn test -Dtest=VehiculoAsignadoServiceTest
-mvn test -Dtest=KafkaVehiculosConsumerTest
+./mvnw test -Dtest=AsignacionServiceTest
+./mvnw test -Dtest=VehiculoAsignadoServiceTest
+./mvnw test -Dtest=KafkaVehiculosConsumerTest
 
 # Generar reporte de cobertura JaCoCo
-mvn verify
+./mvnw clean verify
 
 # Abrir el reporte en el navegador
 open target/site/jacoco/index.html        # Mac
@@ -267,7 +274,13 @@ xdg-open target/site/jacoco/index.html    # Linux
 start target/site/jacoco/index.html       # Windows
 ```
 
-El proyecto está configurado para **fallar si la cobertura en `domain` y `application` es menor al 100%**. Esto está definido en el `pom.xml` con el plugin de JaCoCo.
+El reporte HTML de JaCoCo queda en `target/site/jacoco/index.html`.
+
+El proyecto esta configurado para **fallar si la cobertura de la logica relevante de `domain` y `application` es menor al 80%**. Esto esta definido en el `pom.xml` con el plugin de JaCoCo.
+
+JaCoCo excluye de la metrica clases sin logica de negocio directa: clase principal de Spring Boot, interfaces de puertos, enums y domain events simples, DTOs y mensajes REST/Kafka, configuraciones Spring/Swagger/Security/Kafka, controladores REST y repositorios JPA generados por Spring Data.
+
+El CI de GitHub Actions ejecuta `./mvnw clean verify` en cada push o pull request hacia `develop` o `main`. Esa validacion compila el proyecto, ejecuta los tests, genera el reporte JaCoCo y aplica el umbral de cobertura configurado.
 
 Ningún test conecta a bases de datos reales ni a Kafka real — todo se simula con Mockito.
 
@@ -400,7 +413,7 @@ fleetops-asignaciones/
 
 | Archivo | Qué hace |
 |---------|----------|
-| `pom.xml` | Define todas las dependencias (Spring Boot 3.3, Kafka, JPA, Flyway, JWT, Swagger, JaCoCo) y la configuración de Maven. Incluye el plugin de JaCoCo configurado para exigir 100% de cobertura en `domain` y `application`. |
+| `pom.xml` | Define todas las dependencias (Spring Boot 3.3, Kafka, JPA, Flyway, JWT, Swagger, JaCoCo) y la configuracion de Maven. Incluye el plugin de JaCoCo configurado para exigir 80% de cobertura en la logica relevante de `domain` y `application`, excluyendo clases sin logica de negocio directa. |
 | `docker-compose.yml` | Describe los cuatro servicios: Zookeeper (requerido por Kafka), Kafka con soporte para transacciones, PostgreSQL con volumen persistente, y el microservicio de Asignaciones. Todos con healthchecks y red interna `fleetops-net`. |
 | `Dockerfile` | Construcción en dos etapas: primera etapa compila con Maven y produce el JAR; segunda etapa copia solo el JAR a una imagen JRE liviana y lo corre como usuario `fleetops` (no-root). |
 | `.env.example` | Plantilla con las 14 variables que necesita el proyecto, cada una con un comentario explicativo. Copiar a `.env` y completar con valores reales. |

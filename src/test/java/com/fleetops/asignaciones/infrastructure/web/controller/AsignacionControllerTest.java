@@ -52,8 +52,7 @@ class AsignacionControllerTest {
         CrearAsignacionRequest request = new CrearAsignacionRequest(
                 "CAMION",
                 LocalDate.now().plusDays(1),
-                LocalDate.now().plusDays(5),
-                "admin@fleetops.com"
+                LocalDate.now().plusDays(5)
         );
 
         // Act & Assert
@@ -66,15 +65,14 @@ class AsignacionControllerTest {
                 .andExpect(jsonPath("$.mensaje").isNotEmpty());
     }
 
-    @Test
-    @DisplayName("POST /asignaciones: dado email inválido, retorna 400 Bad Request")
-    void crear_dadoEmailInvalido_retorna400() throws Exception {
+        @Test
+        @DisplayName("POST /asignaciones: dado tipo de vehículo vacío, retorna 400 Bad Request")
+        void crear_dadoTipoVehiculoVacio_retorna400() throws Exception {
         // Arrange
         CrearAsignacionRequest request = new CrearAsignacionRequest(
-                "CAMION",
+                                "",
                 LocalDate.now().plusDays(1),
-                LocalDate.now().plusDays(5),
-                "no-es-un-email"
+                LocalDate.now().plusDays(5)
         );
 
         // Act & Assert

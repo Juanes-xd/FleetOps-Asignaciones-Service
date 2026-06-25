@@ -10,6 +10,9 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+import java.util.UUID;
+
 /**
  * Driving adapter — escucha las respuestas del microservicio de Vehículos.
  *
@@ -37,15 +40,22 @@ public class KafkaVehiculosConsumer {
             groupId = "${asignaciones.kafka.consumer.group-id}",
             containerFactory = "kafkaListenerContainerFactory"
     )
-    public void onVehiculoConfirmado(VehiculoConfirmadoMessage mensaje, Acknowledgment ack) {
-        log.info("Coreografia: vehiculo {} confirmado para asignacion {}",
-                mensaje.idVehiculo(), mensaje.idAsignacion());
+    public void onVehiculoConfirmado(Map<String, Object> payload, Acknowledgment ack) {
         try {
-            procesarVehiculoAsignadoUseCase.procesar(mensaje.idAsignacion(), mensaje.idVehiculo());
+            // Convertir manualmente
+            String idAsignacion = (String) payload.get("idAsignacion");
+            String idVehiculo = (String) payload.get("idVehiculo");
+
+            log.info("Coreografia: vehiculo {} confirmado para asignacion {}",
+                    idVehiculo, idAsignacion);
+
+            procesarVehiculoAsignadoUseCase.procesar(
+                    UUID.fromString(idAsignacion),
+                    UUID.fromString(idVehiculo)
+            );
             ack.acknowledge();
         } catch (Exception ex) {
-            log.error("Error procesando confirmacion de vehiculo para asignacion {}: {}",
-                    mensaje.idAsignacion(), ex.getMessage());
+            log.error("Error procesando confirmacion: {}", ex.getMessage(), ex);
         }
     }
 
@@ -54,15 +64,18 @@ public class KafkaVehiculosConsumer {
             groupId = "${asignaciones.kafka.consumer.group-id}",
             containerFactory = "kafkaListenerContainerFactory"
     )
-    public void onVehiculoRechazado(VehiculoRechazadoMessage mensaje, Acknowledgment ack) {
-        log.warn("Coreografia: vehiculo rechazado para asignacion {}. Motivo: {}",
-                mensaje.idAsignacion(), mensaje.motivo());
+    public void onVehiculoRechazado(Map<String, Object> payload, Acknowledgment ack) {
         try {
-            procesarVehiculoRechazadoUseCase.procesar(mensaje.idAsignacion(), mensaje.motivo());
+            String idAsignacion = (String) payload.get("idAsignacion");
+            String motivo = (String) payload.get("motivo");
+
+            log.warn("Coreografia: vehiculo rechazado para asignacion {}. Motivo: {}",
+                    idAsignacion, motivo);
+
+            procesarVehiculoRechazadoUseCase.procesar(UUID.fromString(idAsignacion), motivo);
             ack.acknowledge();
         } catch (Exception ex) {
-            log.error("Error procesando rechazo de vehiculo para asignacion {}: {}",
-                    mensaje.idAsignacion(), ex.getMessage());
+            log.error("Error procesando rechazo: {}", ex.getMessage(), ex);
         }
     }
 }

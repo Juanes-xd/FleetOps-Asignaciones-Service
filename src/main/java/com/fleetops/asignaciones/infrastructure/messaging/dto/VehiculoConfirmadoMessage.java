@@ -13,6 +13,6 @@ import java.util.UUID;
  * que le diga cuándo publicarlo.
  */
 public record VehiculoConfirmadoMessage(
-        UUID idAsignacion,
-        UUID idVehiculo
+        String idAsignacion,
+        String idVehiculo
 ) {}

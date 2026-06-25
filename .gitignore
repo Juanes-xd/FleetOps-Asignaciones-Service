@@ -21,3 +21,5 @@ target/site/
 # OS
 .DS_Store
 Thumbs.db
+
+ERRORES_RESUMEN.md

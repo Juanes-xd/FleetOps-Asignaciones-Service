@@ -66,10 +66,11 @@ public class KafkaConfig {
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         config.put(JsonDeserializer.TRUSTED_PACKAGES, "com.fleetops.*");
-        config.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
-        return new DefaultKafkaConsumerFactory<>(config,
+        return new DefaultKafkaConsumerFactory<>(
+                config,
                 new StringDeserializer(),
-                new JsonDeserializer<>(Object.class, false));
+                new JsonDeserializer<>(Object.class, false) // false = no usar headers
+        );
     }
 
     @Bean

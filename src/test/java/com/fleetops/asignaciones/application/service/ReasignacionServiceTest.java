@@ -112,4 +112,42 @@ class ReasignacionServiceTest {
 
         verify(eventPublisher, never()).publicar(any(), any());
     }
+
+    @Test
+    @DisplayName("procesar: dado saga inexistente, lanza excepcion sin publicar evento")
+    void procesar_dadoSagaInexistente_lanzaExcepcion() {
+
+        UUID idAsignacion = UUID.randomUUID();
+        UUID idVehiculo = UUID.randomUUID();
+
+        Conductor conductor = Conductor.builder()
+                .id(UUID.randomUUID())
+                .estado(EstadoConductor.RESERVADO)
+                .build();
+
+        Asignacion asignacion = Asignacion.builder()
+                .id(idAsignacion)
+                .conductor(conductor)
+                .vehiculoId(idVehiculo)
+                .build();
+
+        when(asignacionRepository.buscarPorId(idAsignacion))
+                .thenReturn(Optional.of(asignacion));
+
+        when(sagaRepository.buscarPorAsignacionId(idAsignacion))
+                .thenReturn(Optional.empty());
+
+        FallaMecanicaRecibidaEvent evento = new FallaMecanicaRecibidaEvent(
+                UUID.randomUUID(),
+                idVehiculo,
+                idAsignacion,
+                "Motor averiado"
+        );
+
+        assertThatThrownBy(() -> service.procesar(evento))
+                .isInstanceOf(NoSuchElementException.class)
+                .hasMessageContaining("Saga no encontrada");
+
+        verify(eventPublisher, never()).publicar(any(), any());
+    }
 }
