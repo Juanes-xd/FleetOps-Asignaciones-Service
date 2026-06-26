@@ -7,3 +7,4 @@ CREATE TABLE asignaciones (
     fecha_fin      DATE         NOT NULL,
     creada_en      TIMESTAMP    NOT NULL DEFAULT NOW()
 );
+

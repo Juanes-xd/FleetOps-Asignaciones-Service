@@ -29,7 +29,8 @@ public class AsignacionController {
         CrearAsignacionUseCase.Command command = new CrearAsignacionUseCase.Command(
                 request.tipoVehiculo(),
                 request.fechaInicio(),
-                request.fechaFin()
+                request.fechaFin(),
+                request.kilometros()
         );
 
         CrearAsignacionUseCase.Result result = crearAsignacionUseCase.ejecutar(command);
