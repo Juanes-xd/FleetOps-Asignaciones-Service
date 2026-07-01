@@ -5,6 +5,8 @@ networks:
 
 volumes:
   postgres-data:
+  prometheus-data:
+  grafana-data:
 
 services:
 
@@ -99,3 +101,34 @@ services:
       KAFKA_TOPIC_INCIDENTES_FALLA: ${KAFKA_TOPIC_INCIDENTES_FALLA:-fleetops.incidentes.falla.mecanica}
       KAFKA_TOPIC_ASIGNACION_COMPLETADA: ${KAFKA_TOPIC_ASIGNACION_COMPLETADA:-fleetops.asignaciones.completada}
       KAFKA_TOPIC_ASIGNACION_FALLIDA: ${KAFKA_TOPIC_ASIGNACION_FALLIDA:-fleetops.asignaciones.fallida}
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: fleetops-prometheus
+    networks:
+      - fleetops-net
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      - asignaciones
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: fleetops-grafana
+    networks:
+      - fleetops-net
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning/datasources/prometheus.yml:/etc/grafana/provisioning/datasources/prometheus.yml:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
