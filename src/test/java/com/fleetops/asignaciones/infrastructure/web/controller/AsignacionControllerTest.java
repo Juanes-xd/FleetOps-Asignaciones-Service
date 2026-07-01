@@ -52,9 +52,9 @@ class AsignacionControllerTest {
         CrearAsignacionRequest request = new CrearAsignacionRequest(
                 "CAMION",
                 LocalDate.now().plusDays(1),
-                LocalDate.now().plusDays(5)
+                LocalDate.now().plusDays(5),
+                500
         );
-
         // Act & Assert
         mockMvc.perform(post("/asignaciones")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -72,7 +72,8 @@ class AsignacionControllerTest {
         CrearAsignacionRequest request = new CrearAsignacionRequest(
                                 "",
                 LocalDate.now().plusDays(1),
-                LocalDate.now().plusDays(5)
+                LocalDate.now().plusDays(5),
+                200
         );
 
         // Act & Assert

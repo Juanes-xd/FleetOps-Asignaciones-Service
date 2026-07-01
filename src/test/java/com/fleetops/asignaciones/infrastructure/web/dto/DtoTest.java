@@ -36,12 +36,14 @@ class DtoTest {
         CrearAsignacionRequest request = new CrearAsignacionRequest(
                 "CAMION",
                 inicio,
-                fin
+                fin,
+                500
         );
 
         assertThat(request.tipoVehiculo()).isEqualTo("CAMION");
         assertThat(request.fechaInicio()).isEqualTo(inicio);
         assertThat(request.fechaFin()).isEqualTo(fin);
+        assertThat(request.kilometros()).isEqualTo(500);
     }
 
     @Test
@@ -60,5 +62,6 @@ class DtoTest {
         assertThat(response.idSaga()).isEqualTo(idSaga);
         assertThat(response.estado()).isEqualTo(EstadoSaga.COMPLETADO);
         assertThat(response.vehiculoId()).isEqualTo(vehiculoId);
+        assertThat(response.motivoFallo()).isNull();
     }
 }
