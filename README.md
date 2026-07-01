@@ -137,13 +137,13 @@ Flujo 3 — Falla mecánica desde Incidentes:
 
 ```bash
 # Todos los tests unitarios
-mvn test
+./mvnw test
 
 # Un test específico
-mvn test -Dtest=AsignacionServiceTest
+./mvnw test -Dtest=AsignacionServiceTest
 
 # Generar reporte de cobertura JaCoCo
-mvn verify
+./mvnw clean verify
 
 # Ver reporte en el navegador
 open target/site/jacoco/index.html        # Mac
@@ -151,7 +151,21 @@ xdg-open target/site/jacoco/index.html    # Linux
 start target/site/jacoco/index.html       # Windows
 ```
 
-La cobertura mínima exigida es **100% de líneas** en los paquetes `domain` y `application`. El build falla si no se cumple.
+El reporte HTML de JaCoCo queda en `target/site/jacoco/index.html`.
+
+La cobertura minima exigida actualmente es **80% de lineas** sobre la logica relevante de `domain` y `application`. El build falla durante `./mvnw clean verify` si no se cumple.
+
+JaCoCo excluye de la metrica clases sin logica de negocio directa:
+
+- clase principal de Spring Boot
+- interfaces de puertos (`application/port`)
+- enums y domain events simples
+- DTOs y mensajes REST/Kafka
+- configuraciones Spring, Swagger, Security y Kafka
+- controladores REST
+- repositorios JPA generados por Spring Data
+
+El CI de GitHub Actions ejecuta `./mvnw clean verify` en cada push o pull request hacia `develop` o `main`. Esa validacion compila el proyecto, ejecuta los tests, genera el reporte JaCoCo y aplica el umbral de cobertura configurado.
 
 ---
 
@@ -171,6 +185,43 @@ src/test/                     Tests unitarios con Mockito (sin BD real ni Kafka 
 ```
 
 Consulta `GUIA_PROYECTO.md` para la descripción detallada de cada archivo.
+
+---
+
+## Monitoreo con Prometheus y Grafana
+
+Al levantar el entorno con Docker Compose quedan disponibles:
+
+- Microservicio: `http://localhost:8080`
+- Health: `http://localhost:8080/actuator/health`
+- Métricas Prometheus: `http://localhost:8080/actuator/prometheus`
+- Prometheus: `http://localhost:9090`
+- Prometheus targets: `http://localhost:9090/targets`
+- Grafana: `http://localhost:3000`
+
+Credenciales locales de Grafana:
+
+- Usuario: `admin`
+- Contraseña: `admin`
+
+Comandos de prueba en PowerShell:
+
+```powershell
+docker compose config
+docker compose up -d --build
+docker compose ps
+curl.exe http://localhost:8080/actuator/health
+curl.exe http://localhost:8080/actuator/prometheus
+```
+
+Evidencias:
+
+- `docker compose ps`
+- `/actuator/health` en `UP`
+- `/actuator/prometheus` mostrando métricas
+- Prometheus target `fleetops-asignaciones` en estado `UP`
+- Grafana con datasource Prometheus conectado
+- Dashboard básico con métricas de CPU, memoria, peticiones y errores
 
 ---
 

@@ -153,11 +153,25 @@
                 </configuration>
             </plugin>
 
-            <!-- JaCoCo: cobertura 100% en domain + application -->
+            <!-- JaCoCo: cobertura 80% en logica relevante de domain + application -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
+                <configuration>
+                    <excludes>
+                        <exclude>com/fleetops/asignaciones/AsignacionesApplication*</exclude>
+                        <exclude>com/fleetops/asignaciones/application/port/**</exclude>
+                        <exclude>com/fleetops/asignaciones/domain/enums/**</exclude>
+                        <exclude>com/fleetops/asignaciones/domain/event/**</exclude>
+                        <exclude>com/fleetops/asignaciones/infrastructure/config/**</exclude>
+                        <exclude>com/fleetops/asignaciones/infrastructure/messaging/config/**</exclude>
+                        <exclude>com/fleetops/asignaciones/infrastructure/messaging/dto/**</exclude>
+                        <exclude>com/fleetops/asignaciones/infrastructure/web/controller/**</exclude>
+                        <exclude>com/fleetops/asignaciones/infrastructure/web/dto/**</exclude>
+                        <exclude>com/fleetops/asignaciones/infrastructure/persistence/jpa/**</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>

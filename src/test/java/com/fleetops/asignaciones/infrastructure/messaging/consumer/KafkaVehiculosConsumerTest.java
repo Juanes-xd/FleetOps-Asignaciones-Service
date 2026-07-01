@@ -37,9 +37,8 @@ class KafkaVehiculosConsumerTest {
     void onVehiculoConfirmado_delegaEnUseCaseYHaceAck() {
 
         UUID idAsignacion = UUID.randomUUID();
-        UUID idVehiculo = UUID.randomUUID();
-
-        Map<String, Object> payload = Map.of(
+        UUID idVehiculo   = UUID.randomUUID();
+        Map<String, Object> mensaje = Map.of(
                 "idAsignacion", idAsignacion.toString(),
                 "idVehiculo", idVehiculo.toString()
         );
@@ -56,15 +55,10 @@ class KafkaVehiculosConsumerTest {
     @Test
     @DisplayName("onVehiculoConfirmado: si ocurre un error no hace ACK")
     void onVehiculoConfirmado_dadoError_noHaceAck() {
-
-        UUID idAsignacion = UUID.randomUUID();
-        UUID idVehiculo = UUID.randomUUID();
-
-        Map<String, Object> payload = Map.of(
-                "idAsignacion", idAsignacion.toString(),
-                "idVehiculo", idVehiculo.toString()
+        Map<String, Object> mensaje = Map.of(
+                "idAsignacion", UUID.randomUUID().toString(),
+                "idVehiculo", UUID.randomUUID().toString()
         );
-
         doThrow(new RuntimeException("DB no disponible"))
                 .when(procesarVehiculoAsignadoUseCase)
                 .procesar(any(), any());
@@ -79,6 +73,11 @@ class KafkaVehiculosConsumerTest {
     void onVehiculoRechazado_delegaEnUseCaseCompensacionYHaceAck() {
 
         UUID idAsignacion = UUID.randomUUID();
+        String motivo     = "Sin stock de vehiculos CAMION";
+        Map<String, Object> mensaje = Map.of(
+                "idAsignacion", idAsignacion.toString(),
+                "motivo", motivo
+        );
 
         Map<String, Object> payload = Map.of(
                 "idAsignacion", idAsignacion.toString(),
@@ -97,14 +96,10 @@ class KafkaVehiculosConsumerTest {
     @Test
     @DisplayName("onVehiculoRechazado: si ocurre un error no hace ACK")
     void onVehiculoRechazado_dadoError_noHaceAck() {
-
-        UUID idAsignacion = UUID.randomUUID();
-
-        Map<String, Object> payload = Map.of(
-                "idAsignacion", idAsignacion.toString(),
+        Map<String, Object> mensaje = Map.of(
+                "idAsignacion", UUID.randomUUID().toString(),
                 "motivo", "motivo"
         );
-
         doThrow(new RuntimeException("Error de compensacion"))
                 .when(procesarVehiculoRechazadoUseCase)
                 .procesar(any(), any());
