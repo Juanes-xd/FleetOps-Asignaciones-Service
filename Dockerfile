@@ -29,6 +29,6 @@ RUN chown fleetops:fleetops app.jar
 
 USER fleetops
 
-EXPOSE 8080
+EXPOSE 8020
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

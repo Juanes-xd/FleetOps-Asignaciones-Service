@@ -77,14 +77,14 @@ services:
     networks:
       - fleetops-net
     ports:
-      - "${SERVER_PORT:-8080}:8080"
+      - "${SERVER_PORT:-8020}:8020"
     depends_on:
       postgres:
         condition: service_healthy
       kafka:
         condition: service_healthy
     environment:
-      SERVER_PORT: 8080
+      SERVER_PORT: 8020
       DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
