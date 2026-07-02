@@ -8,5 +8,6 @@ public record VehiculoSolicitadoEvent(
         UUID idAsignacion,
         String tipoVehiculo,
         LocalDate fechaInicio,
-        LocalDate fechaFin
+        LocalDate fechaFin,
+        Integer kilometros
 ) {}

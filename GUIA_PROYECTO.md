@@ -222,7 +222,7 @@ kafka-console-producer \
 # Pegar este JSON y presionar Enter:
 {"idAsignacion":"UUID_DE_TU_ASIGNACION","idVehiculo":"UUID_DEL_VEHICULO"}
 #Ejemplo para las longitudes de los UUIDs:
-{"idAsignacion":"dc912c19-25d1-4d29-be08-0f03f2459f45","idVehiculo":"11111111-1111-1111-1111-111211111111"}
+{"idAsignacion":"e7f351fe-9807-4c00-bc01-175be1b7e325","idVehiculo":"11111111-1111-1111-1111-111211111111"}
 # Simular que Vehículos rechazó la solicitud
 kafka-console-producer \
   --bootstrap-server localhost:29092 \

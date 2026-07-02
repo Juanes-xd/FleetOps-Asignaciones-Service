@@ -8,7 +8,8 @@ public interface CrearAsignacionUseCase {
     record Command(
             String tipoVehiculo,
             LocalDate fechaInicio,
-            LocalDate fechaFin
+            LocalDate fechaFin,
+            Integer kilometros
     ) {}
 
     record Result(UUID idSaga, UUID idAsignacion) {}

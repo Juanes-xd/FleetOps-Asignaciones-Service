@@ -18,5 +18,8 @@ public record CrearAsignacionRequest(
 
         @NotNull(message = "La fecha de fin es obligatoria")
         @Future(message = "La fecha de fin debe ser futura")
-        LocalDate fechaFin
+        LocalDate fechaFin,
+
+        @NotNull(message = "Los kilometros a recorrer son obligatorios")
+        Integer kilometros
 ) {}

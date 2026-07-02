@@ -60,6 +60,7 @@ public class AsignacionService implements CrearAsignacionUseCase {
                 .tipoVehiculo(command.tipoVehiculo())
                 .fechaInicio(command.fechaInicio())
                 .fechaFin(command.fechaFin())
+                .kilometros(command.kilometros())
                 .build();
         asignacion = asignacionRepository.guardar(asignacion);
 
@@ -77,7 +78,8 @@ public class AsignacionService implements CrearAsignacionUseCase {
                 asignacion.getId(),
                 asignacion.getTipoVehiculo(),
                 asignacion.getFechaInicio(),
-                asignacion.getFechaFin()
+                asignacion.getFechaFin(),
+                asignacion.getKilometros()
         ));
 
         return new CrearAsignacionUseCase.Result(saga.getId(), asignacion.getId());

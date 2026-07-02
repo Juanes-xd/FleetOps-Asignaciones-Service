@@ -31,6 +31,9 @@ public class Asignacion {
     @Column(name = "fecha_fin", nullable = false)
     private LocalDate fechaFin;
 
+    @Column(name = "kilometros", nullable = false)
+    private Integer kilometros;
+
     @Column(name = "creada_en", nullable = false)
     private LocalDateTime creadaEn;
 

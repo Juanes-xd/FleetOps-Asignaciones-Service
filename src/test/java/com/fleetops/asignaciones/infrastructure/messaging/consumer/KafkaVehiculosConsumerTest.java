@@ -13,78 +13,99 @@ import org.springframework.kafka.support.Acknowledgment;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("KafkaVehiculosConsumer — driving adapter coreografiado")
 class KafkaVehiculosConsumerTest {
 
-    @Mock ProcesarVehiculoAsignadoUseCase procesarVehiculoAsignadoUseCase;
-    @Mock ProcesarVehiculoRechazadoUseCase procesarVehiculoRechazadoUseCase;
-    @Mock Acknowledgment ack;
+    @Mock
+    ProcesarVehiculoAsignadoUseCase procesarVehiculoAsignadoUseCase;
 
-    @InjectMocks KafkaVehiculosConsumer consumer;
+    @Mock
+    ProcesarVehiculoRechazadoUseCase procesarVehiculoRechazadoUseCase;
+
+    @Mock
+    Acknowledgment ack;
+
+    @InjectMocks
+    KafkaVehiculosConsumer consumer;
 
     @Test
-    @DisplayName("onVehiculoConfirmado: dado mensaje de confirmacion, delega en use case y hace ACK")
+    @DisplayName("onVehiculoConfirmado: delega en use case y hace ACK")
     void onVehiculoConfirmado_delegaEnUseCaseYHaceAck() {
+
         UUID idAsignacion = UUID.randomUUID();
-        UUID idVehiculo   = UUID.randomUUID();
-        Map<String, Object> mensaje = Map.of(
+        UUID idVehiculo = UUID.randomUUID();
+
+        Map<String, Object> payload = Map.of(
                 "idAsignacion", idAsignacion.toString(),
                 "idVehiculo", idVehiculo.toString()
         );
 
-        consumer.onVehiculoConfirmado(mensaje, ack);
+        consumer.onVehiculoConfirmado(payload, ack);
 
-        verify(procesarVehiculoAsignadoUseCase).procesar(idAsignacion, idVehiculo);
+        verify(procesarVehiculoAsignadoUseCase)
+                .procesar(idAsignacion, idVehiculo);
+
         verify(ack).acknowledge();
         verifyNoInteractions(procesarVehiculoRechazadoUseCase);
     }
 
     @Test
-    @DisplayName("onVehiculoConfirmado: dado error en use case, NO hace ACK para que Kafka reintente")
+    @DisplayName("onVehiculoConfirmado: si ocurre un error no hace ACK")
     void onVehiculoConfirmado_dadoError_noHaceAck() {
-        Map<String, Object> mensaje = Map.of(
+
+        Map<String, Object> payload = Map.of(
                 "idAsignacion", UUID.randomUUID().toString(),
                 "idVehiculo", UUID.randomUUID().toString()
         );
-        doThrow(new RuntimeException("DB no disponible"))
-                .when(procesarVehiculoAsignadoUseCase).procesar(any(), any());
 
-        consumer.onVehiculoConfirmado(mensaje, ack);
+        doThrow(new RuntimeException("DB no disponible"))
+                .when(procesarVehiculoAsignadoUseCase)
+                .procesar(any(), any());
+
+        consumer.onVehiculoConfirmado(payload, ack);
 
         verify(ack, never()).acknowledge();
     }
 
     @Test
-    @DisplayName("onVehiculoRechazado: dado mensaje de rechazo, delega en use case de compensacion y hace ACK")
+    @DisplayName("onVehiculoRechazado: delega en compensación y hace ACK")
     void onVehiculoRechazado_delegaEnUseCaseCompensacionYHaceAck() {
+
         UUID idAsignacion = UUID.randomUUID();
-        String motivo     = "Sin stock de vehiculos CAMION";
-        Map<String, Object> mensaje = Map.of(
+        String motivo = "Sin stock de vehiculos CAMION";
+
+        Map<String, Object> payload = Map.of(
                 "idAsignacion", idAsignacion.toString(),
                 "motivo", motivo
         );
 
-        consumer.onVehiculoRechazado(mensaje, ack);
+        consumer.onVehiculoRechazado(payload, ack);
 
-        verify(procesarVehiculoRechazadoUseCase).procesar(idAsignacion, motivo);
+        verify(procesarVehiculoRechazadoUseCase)
+                .procesar(idAsignacion, motivo);
+
         verify(ack).acknowledge();
         verifyNoInteractions(procesarVehiculoAsignadoUseCase);
     }
 
     @Test
-    @DisplayName("onVehiculoRechazado: dado error en compensacion, NO hace ACK")
+    @DisplayName("onVehiculoRechazado: si ocurre un error no hace ACK")
     void onVehiculoRechazado_dadoError_noHaceAck() {
-        Map<String, Object> mensaje = Map.of(
+
+        Map<String, Object> payload = Map.of(
                 "idAsignacion", UUID.randomUUID().toString(),
                 "motivo", "motivo"
         );
-        doThrow(new RuntimeException("Error de compensacion"))
-                .when(procesarVehiculoRechazadoUseCase).procesar(any(), any());
 
-        consumer.onVehiculoRechazado(mensaje, ack);
+        doThrow(new RuntimeException("Error de compensacion"))
+                .when(procesarVehiculoRechazadoUseCase)
+                .procesar(any(), any());
+
+        consumer.onVehiculoRechazado(payload, ack);
 
         verify(ack, never()).acknowledge();
     }
