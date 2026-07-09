@@ -63,7 +63,7 @@ services:
       SERVICES: sns,sqs
       DEFAULT_REGION: us-east-1
     volumes:
-      - ./scripts/localstack-init.sh:/etc/localstack/init/ready.d/localstack-init.sh:ro
+      - ./scripts:/etc/localstack/init/ready.d/
     healthcheck:
       test: ["CMD", "awslocal", "sqs", "list-queues"]
       interval: 10s
@@ -121,6 +121,9 @@ services:
       KAFKA_TOPIC_ASIGNACION_FALLIDA: ${KAFKA_TOPIC_ASIGNACION_FALLIDA:-fleetops.asignaciones.fallida}
       AWS_REGION: ${AWS_REGION:-us-east-1}
       SQS_QUEUE_INCIDENTES_FALLA: ${SQS_QUEUE_INCIDENTES_FALLA:-queue_assignations}
+      SPRING_CLOUD_AWS_SQS_ENDPOINT: http://localstack:4566
+      SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY: test
+      SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY: test
 
   prometheus:
     image: prom/prometheus:latest
