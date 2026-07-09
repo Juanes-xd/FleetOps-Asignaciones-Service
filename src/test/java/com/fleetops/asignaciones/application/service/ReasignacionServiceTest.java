@@ -4,6 +4,7 @@ import com.fleetops.asignaciones.application.port.out.AsignacionRepositoryPort;
 import com.fleetops.asignaciones.application.port.out.ConductorRepositoryPort;
 import com.fleetops.asignaciones.application.port.out.EventPublisherPort;
 import com.fleetops.asignaciones.application.port.out.SagaRepositoryPort;
+import com.fleetops.asignaciones.application.port.out.VehiculoConsultaPort;
 import com.fleetops.asignaciones.domain.enums.EstadoConductor;
 import com.fleetops.asignaciones.domain.enums.EstadoSaga;
 import com.fleetops.asignaciones.domain.event.FallaMecanicaRecibidaEvent;
@@ -40,6 +41,7 @@ class ReasignacionServiceTest {
     @Mock ConductorRepositoryPort conductorRepository;
     @Mock SagaRepositoryPort sagaRepository;
     @Mock EventPublisherPort eventPublisher;
+    @Mock VehiculoConsultaPort vehiculoConsultaPort;
 
     @InjectMocks ReasignacionService service;
 
@@ -52,11 +54,12 @@ class ReasignacionServiceTest {
     }
 
     @Test
-    @DisplayName("procesar: incidente mecanico grave libera vehiculo, marca SAGA en espera y publica liberacion + solicitud")
+    @DisplayName("procesar: incidente mecanico grave resuelve la placa, libera vehiculo, marca SAGA en espera y publica liberacion + solicitud")
     void procesar_dadoIncidenteMecanicoGrave_liberaVehiculoYPublicaEventos() {
         // Arrange
         UUID idAsignacion = UUID.randomUUID();
         UUID idVehiculo   = UUID.randomUUID();
+        String placa      = "AUT004";
         String idIncidente = UUID.randomUUID().toString();
 
         Conductor conductor = Conductor.builder()
@@ -74,6 +77,7 @@ class ReasignacionServiceTest {
                 .estado(EstadoSaga.COMPLETADO)
                 .build();
 
+        when(vehiculoConsultaPort.buscarIdPorPlaca(placa)).thenReturn(Optional.of(idVehiculo));
         when(asignacionRepository.buscarPorVehiculoId(idVehiculo)).thenReturn(Optional.of(asignacion));
         when(sagaRepository.buscarPorAsignacionId(idAsignacion)).thenReturn(Optional.of(saga));
         when(asignacionRepository.guardar(any())).thenReturn(asignacion);
@@ -81,7 +85,7 @@ class ReasignacionServiceTest {
 
         FallaMecanicaRecibidaEvent evento = new FallaMecanicaRecibidaEvent(
                 idIncidente,
-                idVehiculo,
+                placa,
                 "Motor averiado",
                 UUID.randomUUID(),
                 "MECANICO",
@@ -97,7 +101,7 @@ class ReasignacionServiceTest {
         // Assert — SAGA en estado de compensación
         assertThat(saga.getEstado()).isEqualTo(EstadoSaga.PENDIENTE_LIBERACION);
 
-        // Assert — VehiculoLiberadoEvent publicado para que Vehículos reaccione
+        // Assert — VehiculoLiberadoEvent publicado para que Vehículos reaccione, con el idVehiculo resuelto (no la placa)
         ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
         verify(eventPublisher).publicar(eq("fleetops.vehiculos.liberar"), captor.capture());
         assertThat(captor.getValue()).isInstanceOf(VehiculoLiberadoEvent.class);
@@ -143,7 +147,7 @@ class ReasignacionServiceTest {
 
         FallaMecanicaRecibidaEvent evento = new FallaMecanicaRecibidaEvent(
                 UUID.randomUUID().toString(),
-                idVehiculo,
+                "AUT004",
                 "Conductor incapacitado",
                 conductorAntiguoId,
                 "HUMANO",
@@ -159,6 +163,7 @@ class ReasignacionServiceTest {
 
         verify(eventPublisher, never()).publicar(eq("fleetops.vehiculos.liberar"), any());
         verify(eventPublisher, never()).publicar(eq("fleetops.vehiculos.solicitar"), any());
+        verifyNoInteractions(vehiculoConsultaPort);
     }
 
     @Test
@@ -166,7 +171,7 @@ class ReasignacionServiceTest {
     void procesar_dadoIncidenteNoGrave_noHaceNada() {
         FallaMecanicaRecibidaEvent evento = new FallaMecanicaRecibidaEvent(
                 UUID.randomUUID().toString(),
-                UUID.randomUUID(),
+                "AUT004",
                 "Golpe menor",
                 UUID.randomUUID(),
                 "MECANICO",
@@ -175,17 +180,35 @@ class ReasignacionServiceTest {
 
         service.procesar(evento);
 
-        verifyNoInteractions(asignacionRepository, conductorRepository, sagaRepository, eventPublisher);
+        verifyNoInteractions(asignacionRepository, conductorRepository, sagaRepository, eventPublisher, vehiculoConsultaPort);
+    }
+
+    @Test
+    @DisplayName("procesar: dado incidente mecanico con placa sin vehiculo registrado, lanza excepcion")
+    void procesar_dadoPlacaSinVehiculoRegistrado_lanzaExcepcion() {
+        String placa = "ZZZ999";
+        when(vehiculoConsultaPort.buscarIdPorPlaca(placa)).thenReturn(Optional.empty());
+
+        FallaMecanicaRecibidaEvent evento = new FallaMecanicaRecibidaEvent(
+                UUID.randomUUID().toString(), placa, "falla", UUID.randomUUID(), "MECANICO", "GRAVE", new Date());
+
+        assertThatThrownBy(() -> service.procesar(evento))
+                .isInstanceOf(NoSuchElementException.class)
+                .hasMessageContaining("Vehiculo no encontrado para placa");
+
+        verifyNoInteractions(asignacionRepository, eventPublisher);
     }
 
     @Test
     @DisplayName("procesar: dado incidente mecanico con vehiculo inexistente, lanza excepcion")
     void procesar_dadoVehiculoInexistente_lanzaExcepcion() {
         UUID idVehiculo = UUID.randomUUID();
+        String placa = "AUT004";
+        when(vehiculoConsultaPort.buscarIdPorPlaca(placa)).thenReturn(Optional.of(idVehiculo));
         when(asignacionRepository.buscarPorVehiculoId(idVehiculo)).thenReturn(Optional.empty());
 
         FallaMecanicaRecibidaEvent evento = new FallaMecanicaRecibidaEvent(
-                UUID.randomUUID().toString(), idVehiculo, "falla", UUID.randomUUID(), "MECANICO", "GRAVE", new Date());
+                UUID.randomUUID().toString(), placa, "falla", UUID.randomUUID(), "MECANICO", "GRAVE", new Date());
 
         assertThatThrownBy(() -> service.procesar(evento))
                 .isInstanceOf(NoSuchElementException.class);
@@ -215,7 +238,7 @@ class ReasignacionServiceTest {
 
         FallaMecanicaRecibidaEvent evento = new FallaMecanicaRecibidaEvent(
                 UUID.randomUUID().toString(),
-                idVehiculo,
+                "AUT004",
                 "Conductor incapacitado",
                 idConductor,
                 "HUMANO",
