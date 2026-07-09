@@ -5,6 +5,7 @@ import com.fleetops.asignaciones.application.port.out.AsignacionRepositoryPort;
 import com.fleetops.asignaciones.application.port.out.ConductorRepositoryPort;
 import com.fleetops.asignaciones.application.port.out.EventPublisherPort;
 import com.fleetops.asignaciones.application.port.out.SagaRepositoryPort;
+import com.fleetops.asignaciones.application.port.out.VehiculoConsultaPort;
 import com.fleetops.asignaciones.domain.event.VehiculoSolicitadoEvent;
 import com.fleetops.asignaciones.domain.event.FallaMecanicaRecibidaEvent;
 import com.fleetops.asignaciones.domain.event.VehiculoLiberadoEvent;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Reacción coreografiada a incidentes reportados por Incidentes.
@@ -37,6 +39,7 @@ public class ReasignacionService implements ProcesarFallaMecanicaUseCase {
     private final ConductorRepositoryPort conductorRepository;
     private final SagaRepositoryPort sagaRepository;
     private final EventPublisherPort eventPublisher;
+    private final VehiculoConsultaPort vehiculoConsultaPort;
 
     @Value("${asignaciones.kafka.topics.vehiculos-liberar}")
     private String topicVehiculosLiberar;
@@ -69,10 +72,14 @@ public class ReasignacionService implements ProcesarFallaMecanicaUseCase {
     }
 
     private void procesarIncidenteMecanico(FallaMecanicaRecibidaEvent evento) {
-        Asignacion asignacion = asignacionRepository
-                .buscarPorVehiculoId(evento.vehicle_id())
+        UUID idVehiculo = vehiculoConsultaPort.buscarIdPorPlaca(evento.vehicle_id())
                 .orElseThrow(() -> new NoSuchElementException(
-                        "Asignacion no encontrada para vehiculo: " + evento.vehicle_id()));
+                        "Vehiculo no encontrado para placa: " + evento.vehicle_id()));
+
+        Asignacion asignacion = asignacionRepository
+                .buscarPorVehiculoId(idVehiculo)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Asignacion no encontrada para vehiculo: " + idVehiculo));
 
         SagaRegistro saga = sagaRepository.buscarPorAsignacionId(asignacion.getId())
                 .orElseThrow(() -> new NoSuchElementException(
@@ -86,7 +93,7 @@ public class ReasignacionService implements ProcesarFallaMecanicaUseCase {
 
         eventPublisher.publicar(topicVehiculosLiberar, new VehiculoLiberadoEvent(
                 saga.getId(),
-                evento.vehicle_id()
+                idVehiculo
         ));
 
         eventPublisher.publicar(topicVehiculosSolicitar, new VehiculoSolicitadoEvent(
@@ -98,8 +105,8 @@ public class ReasignacionService implements ProcesarFallaMecanicaUseCase {
                 asignacion.getKilometros()
         ));
 
-        log.info("Coreografia: incidente mecanico grave {}. Vehiculo {} liberado y re-solicitado para asignacion {}",
-                evento.incident_id(), evento.vehicle_id(), asignacion.getId());
+        log.info("Coreografia: incidente mecanico grave {}. Vehiculo {} (placa {}) liberado y re-solicitado para asignacion {}",
+                evento.incident_id(), idVehiculo, evento.vehicle_id(), asignacion.getId());
     }
 
     private void procesarIncidenteHumano(FallaMecanicaRecibidaEvent evento) {

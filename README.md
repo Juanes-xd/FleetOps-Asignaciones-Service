@@ -291,8 +291,8 @@ mensaje automáticamente en el sobre de notificación que `SqsIncidentesConsumer
 
 ```powershell
 docker exec -it fleetops-localstack awslocal sns publish `
-  --topic-arn arn:aws:sns:us-east-1:000000000000:fleetops-incidentes-falla-mecanica `
-  --message '{"incident_id":"11111111-1111-1111-1111-111111111111","vehicle_id":"11111111-1111-1111-1111-111211111111","description":"Falla grave de motor","driver_id":"11111111-1111-1111-1111-111111111111","incident_type":"MECANICO","severity":"GRAVE","event_date":"2026-07-02T10:15:00Z"}'
+  --topic-arn arn:aws:sns:us-east-1:000000000000:queue_assignations `
+  --message '{"incident_id":"INC-MEC-GRV-20260621-a3f9","vehicle_id":"11111111-1111-1111-1111-111211111111","description":"Falla grave de motor","driver_id":"11111111-1111-1111-1111-111111111111","incident_type":"MECANICO","severity":"GRAVE","event_date":"2026-07-02T10:15:00Z"}'
 ```
 
 En ese caso debes ver en los logs que Asignaciones:

@@ -236,18 +236,18 @@ docker exec -it fleetops-kafka bash
 
 # Simular que Vehículos confirmó la asignación - Esto publica vehiculos 
 kafka-console-producer \
-  --bootstrap-server localhost:29092 \
+  --bootstrap-server localhost:9092 \
   --topic fleetops.asignaciones.vehiculo.confirmado
 
 # Pegar este JSON y presionar Enter:
 {"idAsignacion":"UUID_DE_TU_ASIGNACION","idVehiculo":"UUID_DEL_VEHICULO"}
 #Ejemplo para las longitudes de los UUIDs:
-{"idAsignacion":"ee58ec8b-3c55-47e0-b38f-154d29cf4dd2","idVehiculo":"11111111-1111-1111-1111-111211111111"}
+{"idAsignacion":"53c72361-c83f-45a0-b585-99a08ad02351","idVehiculo":"11111111-1111-1111-1111-111211111111"}
 
 #----------------
 # Simular que Vehículos rechazó la solicitud
 kafka-console-producer \
-  --bootstrap-server localhost:29092 \
+  --bootstrap-server localhost:9092 \
   --topic fleetops.asignaciones.vehiculo.fallido
 
 # Pegar este JSON:
@@ -262,8 +262,8 @@ docker exec -it fleetops-localstack awslocal sns publish \
   --topic-arn arn:aws:sns:us-east-1:000000000000:fleetops-incidentes-falla-mecanica \
   --message '{
     "incident_id": "INC-MEC-GRV-20260621-a3f9",
-    "driver_id": "CONDUCTOR-001",
-    "vehicle_id": "ABC-123",
+    "driver_id": "22222222-2222-2222-2222-222222222222",
+    "vehicle_id": "11111111-1111-1111-1111-111211111111",
     "incident_type": "MECANICO",
     "severity": "GRAVE",
     "description": "Falla en los frenos.",
@@ -279,7 +279,7 @@ kafka-console-consumer \
 {"idSaga":"UUID","idAsignacion":"UUID","tipoVehiculo":"CAMION","fechaInicio":"2026-07-01","fechaFin":"2026-07-10", "kilometros":"100"}
   
 #Ver todas las solictudes completadas
-kafka-console-consumer \  --bootstrap-server localhost:29092 \ --topic fleetops.asignaciones.completada \--from-beginning 
+kafka-console-consumer \  --bootstrap-server localhost:9092 \ --topic fleetops.asignaciones.completada \--from-beginning 
   
 ```
 

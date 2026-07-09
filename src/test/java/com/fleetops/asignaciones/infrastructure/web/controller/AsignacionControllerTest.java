@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fleetops.asignaciones.application.port.in.CrearAsignacionUseCase;
 import com.fleetops.asignaciones.infrastructure.web.dto.CrearAsignacionRequest;
+import com.fleetops.asignaciones.infrastructure.web.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDate;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -35,7 +37,9 @@ class AsignacionControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
         objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     }
 
@@ -81,5 +85,28 @@ class AsignacionControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /asignaciones: dado que no hay conductor disponible, retorna 404 con mensaje claro (no un error genérico)")
+    void crear_dadoSinConductorDisponible_retorna404ConMensajeClaro() throws Exception {
+        // Arrange
+        when(crearAsignacionUseCase.ejecutar(any()))
+                .thenThrow(new NoSuchElementException("No hay conductor disponible para tipo: CAMION"));
+
+        CrearAsignacionRequest request = new CrearAsignacionRequest(
+                "CAMION",
+                LocalDate.now().plusDays(1),
+                LocalDate.now().plusDays(5),
+                500
+        );
+
+        // Act & Assert
+        mockMvc.perform(post("/asignaciones")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value("No hay conductor disponible para tipo: CAMION"));
     }
 }
