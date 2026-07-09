@@ -6,4 +6,4 @@ scrape_configs:
     metrics_path: /actuator/prometheus
     static_configs:
       - targets:
-          - asignaciones:8082
+          - asignaciones:8020
