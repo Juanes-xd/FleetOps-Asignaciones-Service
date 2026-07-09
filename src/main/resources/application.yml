@@ -67,6 +67,8 @@ springdoc:
     path: /v3/api-docs
 
 asignaciones:
+  vehiculos:
+    base-url: ${VEHICULOS_SERVICE_URL:http://18.189.40.213:8081}
   kafka:
     consumer:
       group-id: ${KAFKA_CONSUMER_GROUP_ID:asignaciones-group}

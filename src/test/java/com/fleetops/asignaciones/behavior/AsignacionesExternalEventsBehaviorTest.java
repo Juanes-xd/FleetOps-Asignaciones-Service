@@ -7,6 +7,7 @@ import com.fleetops.asignaciones.application.port.out.AsignacionRepositoryPort;
 import com.fleetops.asignaciones.application.port.out.ConductorRepositoryPort;
 import com.fleetops.asignaciones.application.port.out.EventPublisherPort;
 import com.fleetops.asignaciones.application.port.out.SagaRepositoryPort;
+import com.fleetops.asignaciones.application.port.out.VehiculoConsultaPort;
 import com.fleetops.asignaciones.application.service.ReasignacionService;
 import com.fleetops.asignaciones.application.service.VehiculoAsignadoService;
 import com.fleetops.asignaciones.application.service.VehiculoRechazadoService;
@@ -68,6 +69,9 @@ class AsignacionesExternalEventsBehaviorTest {
 
     @Mock
     private EventPublisherPort eventPublisher;
+
+    @Mock
+    private VehiculoConsultaPort vehiculoConsultaPort;
 
     @Mock
     private Acknowledgment kafkaAck;
@@ -230,6 +234,7 @@ class AsignacionesExternalEventsBehaviorTest {
                 .estado(EstadoSaga.COMPLETADO)
                 .build();
 
+        when(vehiculoConsultaPort.buscarIdPorPlaca(idVehiculo.toString())).thenReturn(Optional.of(idVehiculo));
         when(asignacionRepository.buscarPorVehiculoId(idVehiculo)).thenReturn(Optional.of(asignacion));
         when(sagaRepository.buscarPorAsignacionId(idAsignacion)).thenReturn(Optional.of(saga));
         when(asignacionRepository.guardar(any(Asignacion.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -266,7 +271,7 @@ class AsignacionesExternalEventsBehaviorTest {
                 snsEnvelope(fallaMecanicaMessage(idVehiculo, idConductor, "MECANICO", "LEVE")),
                 sqsAck);
 
-        verifyNoInteractions(asignacionRepository, conductorRepository, sagaRepository, eventPublisher);
+        verifyNoInteractions(asignacionRepository, conductorRepository, sagaRepository, eventPublisher, vehiculoConsultaPort);
         verify(sqsAck).acknowledge();
     }
 
@@ -294,7 +299,8 @@ class AsignacionesExternalEventsBehaviorTest {
                 asignacionRepository,
                 conductorRepository,
                 sagaRepository,
-                eventPublisher);
+                eventPublisher,
+                vehiculoConsultaPort);
         ReflectionTestUtils.setField(service, "topicVehiculosLiberar", TOPIC_VEHICULOS_LIBERAR);
         ReflectionTestUtils.setField(service, "topicVehiculosSolicitar", TOPIC_VEHICULOS_SOLICITAR);
         return service;

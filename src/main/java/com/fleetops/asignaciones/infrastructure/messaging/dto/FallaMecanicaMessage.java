@@ -10,6 +10,10 @@ import java.util.UUID;
 /**
  * Mensaje que llega desde el microservicio de Incidentes.
  * Via topic: fleetops.incidentes.falla.mecanica
+ *
+ * vehicleId llega como String porque Incidentes lo reporta como la placa del vehículo,
+ * no su id interno. Ver {@link com.fleetops.asignaciones.application.port.out.VehiculoConsultaPort}
+ * para la resolución placa -> idVehiculo.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record FallaMecanicaMessage(
@@ -19,7 +23,7 @@ public record FallaMecanicaMessage(
 
         @JsonProperty("vehicle_id")
         @JsonAlias({"vehicleId"})
-        UUID vehicleId,
+        String vehicleId,
 
         @JsonProperty("description")
         String description,
